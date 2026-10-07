@@ -1,0 +1,59 @@
+/* Ocean layer: fixed underwater scene behind the content. --depth (0 = surface, 1 = deep) is set from scroll in laut.js */
+#ocean{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;--depth:0}
+#ocean .tint{position:absolute;inset:0;background:linear-gradient(180deg,rgba(63,214,198,.16),rgba(16,26,73,0) 55%);opacity:calc(1 - var(--depth)*1.2)}
+#ocean .abyss{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 120%,#04071f 0%,rgba(4,7,31,.6) 50%,rgba(4,7,31,0) 80%);opacity:calc(var(--depth)*1.1)}
+
+/* sunlight from the surface */
+#ocean .rays{position:absolute;left:-10%;right:-10%;top:-20%;height:110%;opacity:calc(.9 - var(--depth)*1.3);mix-blend-mode:screen}
+#ocean .rays i{position:absolute;top:0;width:12vw;min-width:70px;height:100%;transform-origin:top center;
+  background:linear-gradient(180deg,rgba(190,240,255,.42),rgba(190,240,255,.12) 45%,transparent 75%);filter:blur(6px);animation:oc-ray 9s ease-in-out infinite}
+#ocean .rays i:nth-child(1){left:18%;transform:rotate(14deg);animation-delay:-2s}
+#ocean .rays i:nth-child(2){left:36%;transform:rotate(8deg);width:7vw;animation-delay:-5s}
+#ocean .rays i:nth-child(3){left:55%;transform:rotate(3deg);animation-delay:-1s}
+#ocean .rays i:nth-child(4){left:74%;transform:rotate(-6deg);width:9vw;animation-delay:-7s}
+#ocean .caustic{position:absolute;inset:0 0 auto;height:45vh;opacity:calc(.55 - var(--depth));mix-blend-mode:screen;
+  background:radial-gradient(14px 6px at 20% 30%,rgba(255,255,255,.35),transparent),radial-gradient(18px 7px at 64% 18%,rgba(255,255,255,.3),transparent),
+  radial-gradient(12px 5px at 82% 40%,rgba(255,255,255,.3),transparent),radial-gradient(16px 6px at 40% 12%,rgba(255,255,255,.28),transparent);
+  background-size:280px 160px;animation:oc-caustic 14s linear infinite}
+
+/* fish & manta: lanes cross the viewport; .kiri lanes swim right-to-left */
+#ocean .lane{position:absolute;left:0;width:100%;animation:oc-swim var(--dur) linear var(--delay) infinite}
+#ocean .lane.kiri{animation-name:oc-swim-back}
+#ocean .lane > .bob{position:absolute;right:100%;animation:oc-bob 5s ease-in-out infinite}
+#ocean .lane.kiri > .bob{right:auto;left:100%}
+#ocean .lane.kiri svg{transform:scaleX(-1)}
+#ocean .lane svg{display:block;width:100%;height:auto;overflow:visible}
+#ocean .lane.jauh{filter:blur(1.5px);opacity:calc(.35 + var(--depth)*.2)}
+#ocean .lane.dekat{opacity:calc(.75 - var(--depth)*.25)}
+#ocean .lane.dalam{opacity:calc(var(--depth)*1.4 - .25);filter:blur(1px)}
+#ocean .school i{position:absolute;left:var(--dx);top:var(--dy);animation:oc-bob 3s ease-in-out var(--d) infinite}
+
+/* deep sea: glowing jellyfish & plankton */
+#ocean .jelly{position:absolute;opacity:calc(var(--depth)*1.5 - .3);animation:oc-jelly var(--d) ease-in-out infinite;filter:drop-shadow(0 0 14px rgba(255,143,200,.7))}
+#ocean .jelly path{animation:oc-pulse 2.6s ease-in-out infinite;transform-origin:30px 30px}
+#ocean .plankton{position:absolute;inset:0;opacity:calc(var(--depth)*1.6 - .2)}
+#ocean .plankton i{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:var(--c);box-shadow:0 0 10px 2px var(--c);animation:oc-twinkle var(--dur) ease-in-out var(--delay) infinite}
+
+/* bubbles */
+#ocean .bubbles i{position:absolute;bottom:-20px;width:var(--s);height:var(--s);border-radius:50%;border:1px solid rgba(220,240,255,.55);
+  background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.6),rgba(255,255,255,.05) 60%);animation:oc-rise var(--dur) linear var(--delay) infinite}
+
+/* depth gauge */
+#ocean .gauge{position:absolute;left:18px;bottom:16px;font-family:var(--mono,ui-monospace),monospace;font-size:11px;letter-spacing:.14em;color:rgba(213,224,255,.6);
+  display:flex;align-items:center;gap:8px;text-transform:uppercase}
+#ocean .gauge::before{content:"";width:22px;height:1px;background:currentColor}
+#ocean .gauge b{font-weight:500;color:#3fd6c6;min-width:4ch;text-align:right}
+
+@keyframes oc-ray{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes oc-caustic{to{background-position:280px 160px}}
+@keyframes oc-swim{from{transform:translateX(0)}to{transform:translateX(calc(100% + 340px))}}
+@keyframes oc-swim-back{from{transform:translateX(0)}to{transform:translateX(calc(-100% - 340px))}}
+@keyframes oc-bob{0%,100%{margin-top:0}50%{margin-top:-10px}}
+@keyframes oc-jelly{0%,100%{transform:translateY(0)}50%{transform:translateY(-40px)}}
+@keyframes oc-pulse{0%,100%{transform:scale(1,1)}50%{transform:scale(1.06,.92)}}
+@keyframes oc-twinkle{0%,100%{opacity:.2}50%{opacity:1}}
+@keyframes oc-rise{0%{transform:translate(0,0);opacity:0}10%{opacity:.9}100%{transform:translate(18px,-110vh);opacity:0}}
+
+#ocean.paused *{animation-play-state:paused!important}
+@media (max-width:700px){#ocean .gauge{display:none}#ocean .lane.jauh{filter:none}#ocean .rays i{filter:none}}
+@media (prefers-reduced-motion:reduce){#ocean *{animation:none!important}#ocean .lane{transform:translateX(var(--rest))}}

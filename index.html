@@ -7,6 +7,7 @@
 <title>Lala Nurrohmi Portfolio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="laut.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tektur:wght@400;500;600;700&family=Albert+Sans:wght@400;500;600&family=Chakra+Petch:wght@400;500&display=swap">
 <style>
 /* Layout: full-bleed indigo stage with a live glossy form behind an oversized name; content below runs in a left-aligned single column with a data-strip rhythm. Single dark look by design. */
@@ -155,6 +156,7 @@ footer{max-width:1180px;margin:0 auto;padding:0 24px 40px;font-family:var(--mono
 </head>
 <body>
 <div class="bg" aria-hidden="true"></div>
+<div id="ocean" aria-hidden="true"></div>
 <canvas id="blob" aria-hidden="true"></canvas>
 <header class="stage">
   <div class="stage-inner">
@@ -411,5 +413,6 @@ document.getElementById('copyBtn').addEventListener('click',function(){
   requestAnimationFrame(frame);
 })();
 </script>
+<script src="laut.js"></script>
 </body>
 </html>
