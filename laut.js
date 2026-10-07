@@ -41,25 +41,25 @@
   var vents=[];for(var vi=0;vi<(small?2:4);vi++)vents.push({x:rnd(.05,.95),t:rnd(0,200)});
   function updateBubbles(dt){
     vents.forEach(function(v){v.t-=dt;if(v.t<=0){
-      var n=Math.round(rnd(3,9)),bx=v.x*W+rnd(-12,12);
-      for(var i=0;i<n;i++)(function(i){setTimeout(function(){bubble(bx+rnd(-4,4),H+10,rnd(1.4,i===0?6.5:4.2))},i*rnd(90,200))})(i);
+      var n=Math.round(rnd(2,6)),bx=v.x*W+rnd(-12,12);
+      for(var i=0;i<n;i++)(function(i){setTimeout(function(){bubble(bx+rnd(-3,3),H+10,rnd(.7,i===0?2.8:1.9))},i*rnd(90,200))})(i);
       v.t=rnd(90,320);if(Math.random()<.25)v.x=rnd(.05,.95)}});
     for(var i=bubbles.length-1;i>=0;i--){var b=bubbles[i];
       var term=-(.45+b.r*.2);b.vy+=(term-b.vy)*.02*dt;          // accelerate to terminal rise speed
       b.ph+=b.f*dt*(1+b.r*.05);b.wob+=.18*dt;
-      b.y+=b.vy*dt;b.x=b.x0+Math.sin(b.ph)*b.r*1.6;              // zig-zag, wider for bigger bubbles
+      b.y+=b.vy*dt;b.x=b.x0+Math.sin(b.ph)*(b.r*1.4+.5);              // zig-zag, wider for bigger bubbles
       b.x0+=Math.sin(time*.004+b.y*.01)*.05*dt;                  // slight current
-      b.r*=1+.0006*dt;                                           // expands as pressure drops
+      b.r*=1+.0003*dt;                                           // expands as pressure drops
       if(b.y<-20)bubbles.splice(i,1)}
   }
   function drawBubbles(){
     for(var i=0;i<bubbles.length;i++){var b=bubbles[i],sq=Math.sin(b.wob)*.13,rx=b.r*(1+sq),ry=b.r*(1-sq);
-      var fade=clamp(b.y/(H*.12),0,1);ctx.globalAlpha=.75*fade;
+      var fade=clamp(b.y/(H*.12),0,1);ctx.globalAlpha=.6*fade;
       ctx.beginPath();ctx.ellipse(b.x,b.y,rx,ry,Math.sin(b.ph)*.4,0,TAU);
       var g=ctx.createRadialGradient(b.x-rx*.35,b.y-ry*.4,0,b.x,b.y,b.r);
       g.addColorStop(0,'rgba(255,255,255,.55)');g.addColorStop(.45,'rgba(200,235,255,.08)');g.addColorStop(.9,'rgba(200,235,255,.18)');g.addColorStop(1,'rgba(230,248,255,.6)');
       ctx.fillStyle=g;ctx.fill();
-      if(b.r>2.5){ctx.beginPath();ctx.arc(b.x-rx*.3,b.y-ry*.35,b.r*.22,0,TAU);ctx.fillStyle='rgba(255,255,255,.9)';ctx.fill()}}
+      if(b.r>1.5){ctx.beginPath();ctx.arc(b.x-rx*.3,b.y-ry*.35,b.r*.22,0,TAU);ctx.fillStyle='rgba(255,255,255,.9)';ctx.fill()}}
     ctx.globalAlpha=1;
   }
 
@@ -141,7 +141,7 @@
       p[i].x=p[i-1].x+qx/qd*this.seg;p[i].y=p[i-1].y+qy/qd*this.seg;p[i].z=p[i-1].z+qz/qd*this.seg}
     // tail-beat frequency: higher with thrust, lower for bigger fish
     this.ph+=(.04+this.thrust*.2)*Math.pow(30/this.len,.35)*dt;
-    if(this.layer==='near'&&Math.random()<.0012*dt){var hp=proj(this.x,this.y,this.z);bubble(hp.x,hp.y,rnd(1.2,2.4))}
+    if(this.layer==='near'&&Math.random()<.0012*dt){var hp=proj(this.x,this.y,this.z);bubble(hp.x,hp.y,rnd(.7,1.4))}
   };
   Fish.prototype.draw=function(){
     var p=this.p,n=this.n,w=this.w,col=this.col,i,u;
@@ -278,31 +278,73 @@
   };
 
   /* ---------- manta ---------- */
-  function Manta(){this.x=rnd(W*.2,W*.8);this.y=rnd(H*.35,H*.7);this.a=Math.random()<.5?0:Math.PI;this.v=.4;this.ph=0;this.nz=Noise();this.s=small?.55:.95;this.par=.15}
+  // A 3-D manta seen a little from below: wings flap up and down with a wave travelling out to the tips,
+  // it banks into turns and alternates strokes with long glides. Back is dark, belly pale.
+  function Manta(){
+    this.s=small?.55:1;this.L=118*this.s;this.B=140*this.s;
+    this.x=rnd(W*.2,W*.8);this.y=rnd(H*.35,H*.65);this.z=rnd(-ZR,0);
+    this.yaw=Math.random()<.5?0:Math.PI;this.course=this.yaw;this.roll=0;this.pitch=0;
+    this.v=.4;this.ph=0;this.amp=1;this.beat=true;this.modeT=rnd(200,400);this.nz=Noise();this.par=.15;
+  }
   Manta.prototype.update=function(dt){
-    var want=(Math.cos(this.a)>=0?0:Math.PI)+this.nz(time*.002)*.3;
-    if(this.x<-180)want=0;if(this.x>W+180)want=Math.PI;
-    this.a+=clamp(angDiff(this.a,want),-.006*dt,.006*dt);
-    var beat=.5+.5*Math.sin(this.ph);this.v+=(.25+beat*.35-this.v)*.02*dt;
-    this.x+=Math.cos(this.a)*this.v*dt;this.y+=Math.sin(this.a)*this.v*dt+Math.cos(this.ph)*.08*dt;this.ph+=.022*dt;
+    // long strokes, then glides with the wings held out
+    this.modeT-=dt;if(this.modeT<=0){this.beat=!this.beat;this.modeT=this.beat?rnd(260,520):rnd(160,300)}
+    this.amp+=((this.beat?1:.12)-this.amp)*.01*dt;
+    this.ph+=(.022+.012*this.amp)*dt;
+    this.course+=this.nz(time*.0015)*.004*dt;
+    this.course+=angDiff(this.course,Math.cos(this.course)>=0?0:Math.PI)*.004*dt;
+    var dx=Math.cos(this.course),dz=Math.sin(this.course),m=this.B;
+    if(this.x<-m*.5)dx+=1.5;if(this.x>W+m*.5)dx-=1.5;if(this.z>0)dz-=this.z/120;if(this.z<-ZR*1.2)dz+=.5;
+    var want=Math.atan2(dz,dx),turn=clamp(angDiff(this.yaw,want),-.0045*dt,.0045*dt);
+    this.yaw+=turn;this.roll+=(-clamp(angDiff(this.yaw,want),-.7,.7)*.7-this.roll)*.03*dt;   // bank into the turn
+    var pT=this.y<H*.3?.12:this.y>H*.75?-.12:Math.sin(time*.004)*.05;this.pitch+=(pT-this.pitch)*.01*dt;
+    // each down-stroke gives a little push
+    var push=Math.max(0,Math.sin(this.ph))*this.amp;this.v+=(.28+push*.3-this.v)*.02*dt;
+    var cp=Math.cos(this.pitch);
+    this.x+=cp*Math.cos(this.yaw)*this.v*dt;this.z+=cp*Math.sin(this.yaw)*this.v*dt;this.y+=Math.sin(this.pitch)*this.v*dt-Math.cos(this.ph)*.06*this.amp*dt;
   };
   Manta.prototype.draw=function(){
-    var al=clamp(depth*1.4-.3,0,.6);if(al<=.01)return;
-    var s=this.s,span=150*s,ch=70*s,f=Math.sin(this.ph);
-    ctx.save();ctx.translate(this.x,this.y);ctx.rotate(this.a);ctx.globalAlpha=al;
-    // wing tips trail the beat: a wave travels out along the span
-    var tipF=-ch*.2+Math.sin(this.ph-1.2)*ch*.4,midF=Math.sin(this.ph-.5)*ch*.18,tipY=span*(.9+.1*Math.cos(this.ph));
-    ctx.beginPath();ctx.moveTo(ch*.55,0);
-    ctx.bezierCurveTo(ch*.5+midF,-tipY*.4,tipF+ch*.15,-tipY*.92,tipF,-tipY);
-    ctx.bezierCurveTo(-ch*.2+midF,-tipY*.7,-ch*.55,-tipY*.25,-ch*.6,0);
-    ctx.bezierCurveTo(-ch*.55,tipY*.25,-ch*.2+midF,tipY*.7,tipF,tipY);
-    ctx.bezierCurveTo(tipF+ch*.15,tipY*.92,ch*.5+midF,tipY*.4,ch*.55,0);ctx.closePath();
-    var g=ctx.createLinearGradient(0,-tipY,0,tipY);g.addColorStop(0,'#8f7cff');g.addColorStop(.5,'#5e6fe0');g.addColorStop(1,'#3fd6c6');
-    ctx.fillStyle=g;ctx.fill();
-    ctx.strokeStyle='#8f7cff';ctx.lineWidth=5*s;ctx.lineCap='round';
-    ctx.beginPath();ctx.moveTo(ch*.5,-ch*.12);ctx.lineTo(ch*.75,-ch*.2+f*2);ctx.moveTo(ch*.5,ch*.12);ctx.lineTo(ch*.75,ch*.2-f*2);ctx.stroke();
-    ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(-ch*.6,0);ctx.quadraticCurveTo(-ch*1.2,Math.sin(this.ph*1.3)*8*s,-ch*1.8,Math.sin(this.ph*1.3-1)*4*s);ctx.stroke();
-    ctx.restore();ctx.globalAlpha=1;
+    var al=clamp(depth*1.4-.3,0,.75);if(al<=.01)return;
+    var self=this,L=this.L,B=this.B,A=B*.32*this.amp,cy=Math.cos(this.yaw),sy=Math.sin(this.yaw),cr=Math.cos(this.roll),sr=Math.sin(this.roll),cp=Math.cos(this.pitch),sp=Math.sin(this.pitch);
+    // local (forward, up, side) -> screen, viewed slightly from below
+    function P(f,u,s){
+      var u1=u*cr-s*sr,s1=u*sr+s*cr;                 // roll
+      var f2=f*cp-u1*sp,u2=f*sp+u1*cp;               // pitch
+      var x=self.x+f2*cy-s1*sy,z=self.z+f2*sy+s1*cy,y=self.y+u2;
+      var q=proj(x,y+(z-self.z)*.28,z);return q;      // tilt: nearer points sit lower, so the belly shows
+    }
+    function wing(side){
+      var pts=[],M=12,i,t,flap;
+      for(i=0;i<=M;i++){t=i/M;flap=-A*Math.sin(self.ph-t*1.5)*Math.pow(t,1.35);
+        pts.push(P(L*(.45-.62*Math.pow(t,1.35))-Math.abs(flap)*.12,flap,side*t*B))}
+      for(i=M;i>=0;i--){t=i/M;flap=-A*Math.sin(self.ph-t*1.5-.25)*Math.pow(t,1.35);
+        pts.push(P(L*(-.45+.28*Math.pow(t,1.8))-Math.abs(flap)*.12,flap,side*t*B))}
+      return pts;
+    }
+    function area(pts){var a=0;for(var i=0;i<pts.length;i++){var p=pts[i],q=pts[(i+1)%pts.length];a+=p.x*q.y-q.x*p.y}return a/2}
+    function path(pts){ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(var i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);ctx.closePath()}
+    ctx.globalAlpha=al;
+    // tail: thin whip with a slow wave
+    ctx.strokeStyle='#5d67bf';ctx.lineWidth=2.2*this.s;ctx.lineCap='round';ctx.beginPath();
+    for(var i=0;i<=10;i++){var t=i/10,q=P(-L*(.42+t*1.1),Math.sin(this.ph*1.2-t*3)*6*this.s*t,0);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y)}ctx.stroke();
+    // wings: back (dark) or belly (pale) depending on which face is toward us
+    [-1,1].forEach(function(side){
+      var w=wing(side),belly=area(w)*side*(Math.cos(self.yaw)>=0?1:-1)>0;
+      path(w);
+      var a=w[0],b=w[12];var g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);
+      if(belly){g.addColorStop(0,'#eef0ff');g.addColorStop(.75,'#c9cdf2');g.addColorStop(1,'#3a3f86')}
+      else{g.addColorStop(0,'#4b5aa8');g.addColorStop(.55,'#5d67bf');g.addColorStop(1,'#7a6fd6')}
+      ctx.fillStyle=g;ctx.fill();
+      ctx.strokeStyle='rgba(190,200,255,.45)';ctx.lineWidth=1.2;ctx.stroke();
+    });
+    // body ridge and head lobes (cephalic fins)
+    var h0=P(L*.48,0,-B*.07),h1=P(L*.48,0,B*.07),hn=P(L*.5,0,0);
+    ctx.fillStyle='#4b5aa8';
+    [-1,1].forEach(function(sd){var r=P(L*.47,0,sd*B*.09),t1=P(L*.68,-6*self.s,sd*B*.11),t2=P(L*.66,4*self.s,sd*B*.06);
+      ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.quadraticCurveTo(t1.x,t1.y,t2.x,t2.y);ctx.lineTo(hn.x,hn.y);ctx.closePath();ctx.fill()});
+    var c0=P(L*.45,0,0),c1=P(-L*.42,0,0);
+    ctx.strokeStyle='rgba(60,70,150,.7)';ctx.lineWidth=6*this.s;ctx.beginPath();ctx.moveTo(c0.x,c0.y);ctx.lineTo(c1.x,c1.y);ctx.stroke();
+    ctx.globalAlpha=1;
   };
 
   /* ---------- populate ---------- */
