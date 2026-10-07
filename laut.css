@@ -12,18 +12,8 @@
 #ocean .rays i:nth-child(3){left:55%;transform:rotate(3deg);animation-delay:-1s}
 #ocean .rays i:nth-child(4){left:74%;transform:rotate(-6deg);width:9vw;animation-delay:-7s}
 
-/* fish & manta are simulated on this canvas (laut.js) */
+/* fish, jellyfish, bubbles and plankton are simulated on this canvas (laut.js) */
 #ocean canvas.swim{position:absolute;inset:0;display:block}
-
-/* deep sea: glowing jellyfish & plankton */
-#ocean .jelly{position:absolute;opacity:calc(var(--depth)*1.5 - .3);animation:oc-jelly var(--d) ease-in-out infinite;filter:drop-shadow(0 0 14px rgba(255,143,200,.7))}
-#ocean .jelly path{animation:oc-pulse 2.6s ease-in-out infinite;transform-origin:30px 30px}
-#ocean .plankton{position:absolute;inset:0;opacity:calc(var(--depth)*1.6 - .2)}
-#ocean .plankton i{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:var(--c);box-shadow:0 0 10px 2px var(--c);animation:oc-twinkle var(--dur) ease-in-out var(--delay) infinite}
-
-/* bubbles */
-#ocean .bubbles i{position:absolute;bottom:-20px;width:var(--s);height:var(--s);border-radius:50%;border:1px solid rgba(220,240,255,.55);
-  background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.6),rgba(255,255,255,.05) 60%);animation:oc-rise var(--dur) linear var(--delay) infinite}
 
 /* depth gauge */
 #ocean .gauge{position:absolute;left:18px;bottom:16px;font-family:var(--mono,ui-monospace),monospace;font-size:11px;letter-spacing:.14em;color:rgba(213,224,255,.6);
@@ -32,10 +22,6 @@
 #ocean .gauge b{font-weight:500;color:#3fd6c6;min-width:4ch;text-align:right}
 
 @keyframes oc-ray{0%,100%{opacity:.55}50%{opacity:1}}
-@keyframes oc-jelly{0%,100%{transform:translateY(0)}50%{transform:translateY(-40px)}}
-@keyframes oc-pulse{0%,100%{transform:scale(1,1)}50%{transform:scale(1.06,.92)}}
-@keyframes oc-twinkle{0%,100%{opacity:.2}50%{opacity:1}}
-@keyframes oc-rise{0%{transform:translate(0,0);opacity:0}10%{opacity:.9}100%{transform:translate(18px,-110vh);opacity:0}}
 
 #ocean.paused *{animation-play-state:paused!important}
 @media (max-width:700px){#ocean .gauge{display:none}#ocean .rays i{filter:none}}
