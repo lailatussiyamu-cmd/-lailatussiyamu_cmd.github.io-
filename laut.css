@@ -1,27 +1,38 @@
-/* Ocean layer: fixed underwater scene behind the content. --depth (0 = surface, 1 = deep) is set from scroll in laut.js */
+/* Ocean layer: fixed underwater scene behind the content. --depth (0 = surface, 1 = deep) is set from scroll in laut.js
+   Pandora-like water: turquoise near the surface, luminous blue in the deep (never black), light reaching the sea floor. */
 #ocean{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;--depth:0}
-#ocean .tint{position:absolute;inset:0;background:linear-gradient(180deg,rgba(63,214,198,.16),rgba(16,26,73,0) 55%);opacity:calc(1 - var(--depth)*1.2)}
-#ocean .abyss{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 120%,#04071f 0%,rgba(4,7,31,.6) 50%,rgba(4,7,31,0) 80%);opacity:calc(var(--depth)*1.1)}
+#ocean .water{position:absolute;inset:0;opacity:.82;background:linear-gradient(180deg,#127c93 0%,#0d5f88 50%,#0b4579 100%)}
+#ocean .water-deep{position:absolute;inset:0;opacity:calc(var(--depth)*.9);background:linear-gradient(180deg,#0b4c88 0%,#0a3a74 55%,#0c4f8c 100%)}
+#ocean .tint{position:absolute;inset:0;background:linear-gradient(180deg,rgba(120,240,240,.22),rgba(16,26,73,0) 45%);opacity:calc(1 - var(--depth)*1.5)}
+/* light pooling on the sea floor: the deep stays bright */
+#ocean .floor{position:absolute;inset:0;background:radial-gradient(90% 45% at 50% 108%,rgba(120,215,255,.5) 0%,rgba(70,160,240,.2) 45%,rgba(70,160,240,0) 75%);opacity:calc(var(--depth)*1.6 - .5)}
 
-/* sunlight from the surface */
-#ocean .rays{position:absolute;left:-10%;right:-10%;top:-20%;height:110%;opacity:calc(.9 - var(--depth)*1.3);mix-blend-mode:screen}
+/* the sun seen through the surface: a soft, shimmering glow the rays fan out from */
+#ocean .sun{position:absolute;left:50%;top:-22vh;width:70vw;height:55vh;translate:-50% 0;border-radius:50%;opacity:calc(.9 - var(--depth)*1.6);
+  background:radial-gradient(closest-side,rgba(255,255,240,.55),rgba(200,245,255,.28) 35%,rgba(150,225,255,.1) 65%,rgba(150,225,255,0));
+  filter:blur(8px);animation:oc-sun 7s ease-in-out infinite}
+
+/* sunlight from the surface, reaching all the way down */
+#ocean .rays{position:absolute;left:-10%;right:-10%;top:-12%;height:125%;opacity:calc(.95 - var(--depth)*.5);mix-blend-mode:screen}
 #ocean .rays i{position:absolute;top:0;width:12vw;min-width:70px;height:100%;transform-origin:top center;
-  background:linear-gradient(180deg,rgba(190,240,255,.42),rgba(190,240,255,.12) 45%,transparent 75%);filter:blur(6px);animation:oc-ray 9s ease-in-out infinite}
+  background:linear-gradient(180deg,rgba(200,245,255,.45),rgba(170,230,255,.16) 50%,transparent 90%);filter:blur(6px);animation:oc-ray 9s ease-in-out infinite}
 #ocean .rays i:nth-child(1){left:18%;transform:rotate(14deg);animation-delay:-2s}
 #ocean .rays i:nth-child(2){left:36%;transform:rotate(8deg);width:7vw;animation-delay:-5s}
 #ocean .rays i:nth-child(3){left:55%;transform:rotate(3deg);animation-delay:-1s}
 #ocean .rays i:nth-child(4){left:74%;transform:rotate(-6deg);width:9vw;animation-delay:-7s}
+#ocean .rays i:nth-child(5){left:46%;transform:rotate(5deg);width:4vw;animation-delay:-3.5s}
 
-/* fish, jellyfish, bubbles and plankton are simulated on this canvas (laut.js) */
+/* fish, jellyfish, manta, reef, bubbles and plankton are simulated on this canvas (laut.js) */
 #ocean canvas.swim{position:absolute;inset:0;display:block}
 
 /* depth gauge */
-#ocean .gauge{position:absolute;left:18px;bottom:16px;font-family:var(--mono,ui-monospace),monospace;font-size:11px;letter-spacing:.14em;color:rgba(213,224,255,.6);
+#ocean .gauge{position:absolute;left:18px;bottom:16px;font-family:var(--mono,ui-monospace),monospace;font-size:11px;letter-spacing:.14em;color:rgba(213,236,255,.7);
   display:flex;align-items:center;gap:8px;text-transform:uppercase}
 #ocean .gauge::before{content:"";width:22px;height:1px;background:currentColor}
-#ocean .gauge b{font-weight:500;color:#3fd6c6;min-width:4ch;text-align:right}
+#ocean .gauge b{font-weight:500;color:#7ff0e4;min-width:4ch;text-align:right}
 
 @keyframes oc-ray{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes oc-sun{0%,100%{transform:scale(1,1)}33%{transform:scale(1.04,.97)}66%{transform:scale(.97,1.03)}}
 
 #ocean.paused *{animation-play-state:paused!important}
 @media (max-width:700px){#ocean .gauge{display:none}#ocean .rays i{filter:none}}
